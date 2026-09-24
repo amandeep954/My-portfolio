@@ -42,7 +42,7 @@ function LoginModal() {
           </div>
           <h2 className="text-2xl font-extrabold">Admin Login</h2>
           <p className="text-muted text-xs mt-1">
-            Admin credentials: <code className="text-coral">admin</code> / <code className="text-coral">Aman#954869</code>
+            Enter admin credentials to access dashboard
           </p>
         </div>
 
