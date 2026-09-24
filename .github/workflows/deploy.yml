@@ -34,8 +34,8 @@ jobs:
           EMAIL_USER: ${{ secrets.EMAIL_USER }}
           EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
           VITE_BACKEND_URL: ${{ secrets.VITE_BACKEND_URL }}
-          REPO_URL: "https://github.com/amandeep954/amandeep-portfolio.git"
-          APP_DIR: "amandeep-portfolio"
+          REPO_URL: "https://github.com/amandeep954/My-portfolio.git"
+          APP_DIR: "My-portfolio"
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
