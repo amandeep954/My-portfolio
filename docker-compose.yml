@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   backend:
+    image: amandeep954/portfolio-backend:latest
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -15,6 +16,7 @@ services:
       - portfolio_net
 
   frontend:
+    image: amandeep954/portfolio-frontend:latest
     build:
       context: ./frontend
       dockerfile: Dockerfile
