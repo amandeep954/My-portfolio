@@ -1,0 +1,19 @@
+# Dependencies
+node_modules
+
+# Environment & Secrets
+.env
+.env.*
+*.env
+
+# Git & Repository
+.git
+.gitignore
+.github
+
+# Documentation & Tooling
+README.md
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+scratch*

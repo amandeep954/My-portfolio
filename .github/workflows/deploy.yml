@@ -1,0 +1,104 @@
+name: Deploy to AWS EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy MERN Stack Portfolio to AWS EC2
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH to AWS EC2
+        uses: appleboy/ssh-action@master
+        env:
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_BUCKET_NAME: ${{ secrets.AWS_BUCKET_NAME }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          EMAIL_USER: ${{ secrets.EMAIL_USER }}
+          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+          VITE_BACKEND_URL: ${{ secrets.VITE_BACKEND_URL }}
+          REPO_URL: "https://github.com/amandeep954/amandeep-portfolio.git"
+          APP_DIR: "amandeep-portfolio"
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          envs: DB_HOST,DB_USER,DB_PASSWORD,DB_NAME,DB_PORT,JWT_SECRET,ADMIN_USERNAME,ADMIN_PASSWORD,AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,AWS_REGION,AWS_BUCKET_NAME,SMTP_HOST,SMTP_PORT,EMAIL_USER,EMAIL_PASS,VITE_BACKEND_URL,REPO_URL,APP_DIR
+          script: |
+            set -e
+
+            echo "🚀 Starting Deployment Process on AWS EC2..."
+
+            # 1. Clone or Pull Latest Code
+            if [ ! -d "$APP_DIR" ]; then
+              echo "📁 Cloning repository for initial setup..."
+              git clone "$REPO_URL" "$APP_DIR"
+              cd "$APP_DIR"
+            else
+              echo "🔄 Pulling latest code from main branch..."
+              cd "$APP_DIR"
+              git fetch origin main
+              git reset --hard origin/main
+            fi
+
+            # 2. Dynamically Generate Production .env File
+            echo "🔑 Generating dynamic .env file on AWS EC2..."
+            cat <<EOF > .env
+            DB_HOST=${DB_HOST}
+            DB_USER=${DB_USER}
+            DB_PASSWORD="${DB_PASSWORD}"
+            DB_NAME=${DB_NAME:-portfolio_db}
+            DB_PORT=${DB_PORT:-3306}
+
+            JWT_SECRET=${JWT_SECRET}
+            ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+            ADMIN_PASSWORD="${ADMIN_PASSWORD}"
+
+            AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+            AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+            AWS_REGION=${AWS_REGION:-ap-south-1}
+            AWS_BUCKET_NAME=${AWS_BUCKET_NAME:-amandeep-portfolio-assets}
+
+            SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
+            SMTP_PORT=${SMTP_PORT:-587}
+            EMAIL_USER=${EMAIL_USER}
+            EMAIL_PASS=${EMAIL_PASS}
+
+            VITE_BACKEND_URL=${VITE_BACKEND_URL:-http://localhost:5000/api}
+            EOF
+
+            echo "✅ .env file created successfully."
+
+            # 3. Build & Run Containers via Docker Compose
+            echo "🐳 Building and starting Docker containers..."
+            if command -v docker-compose &> /dev/null; then
+              docker-compose down || true
+              docker-compose up -d --build
+            else
+              docker compose down || true
+              docker compose up -d --build
+            fi
+
+            # 4. Cleanup old dangling images & build cache
+            echo "🧹 Cleaning up dangling Docker images..."
+            docker image prune -f
+
+            echo "🎉 Deployment to AWS EC2 Completed Successfully!"
