@@ -1,20 +1,14 @@
 import axios from "axios";
 
 const getBackendUrl = () => {
-  let envUrl = (import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || "").toString().trim();
-  
-  const isInvalid = !envUrl || envUrl === "undefined" || envUrl === "null" || !envUrl.startsWith("http");
-  const isLocalhostInProd = envUrl.includes("localhost") && typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1";
-
-  if (isInvalid || isLocalhostInProd) {
-    if (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
-      envUrl = `${window.location.protocol}//${window.location.hostname}:5000/api`;
-    } else {
-      envUrl = "http://localhost:5000/api";
-    }
+  if (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+    // In production, ALWAYS use Nginx reverse proxy on same-origin /api
+    // Eliminates Mixed Content (HTTP inside HTTPS) and Port 5000 blocking
+    return `${window.location.origin}/api`;
   }
 
-  const clean = envUrl.trim().replace(/\/+$/, "");
+  let envUrl = (import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || "http://localhost:5000/api").toString().trim();
+  const clean = envUrl.replace(/\/+$/, "");
   return clean.endsWith("/api") ? clean : `${clean}/api`;
 };
 
